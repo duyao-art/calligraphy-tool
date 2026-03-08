@@ -129,6 +129,19 @@ def download(file_id):
     return response
 
 
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({'error': 'File too large (max 100 MB)'}), 413
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({'error': 'Internal server error'}), 500
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({'error': 'Not found'}), 404
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
     # debug=True only when run directly (dev); gunicorn ignores this
