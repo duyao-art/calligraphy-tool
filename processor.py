@@ -13,8 +13,8 @@ def load_manuscript(path):
             doc = fitz.open(path)
             images = []
             for page in doc:
-                # Render at 200 dpi (scale factor = 200/72 ≈ 2.78)
-                mat = fitz.Matrix(200 / 72, 200 / 72)
+                # Render at 150 dpi — good quality, ~44% less memory than 200 dpi
+                mat = fitz.Matrix(150 / 72, 150 / 72)
                 pix = page.get_pixmap(matrix=mat, alpha=False)
                 img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -286,15 +286,31 @@ def process_manuscript(input_path, output_pdf_path, preview_path, params=None):
 
     images = load_manuscript(input_path)
 
+    # Cap maximum image dimension to avoid OOM on cloud free tier (512 MB RAM).
+    # 3000 px on the long side is plenty for both detection and PDF quality.
+    MAX_DIM = 3000
+    capped = []
+    for img in images:
+        h, w = img.shape[:2]
+        if max(h, w) > MAX_DIM:
+            scale = MAX_DIM / max(h, w)
+            img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+        capped.append(img)
+    images = capped
+
     pages_data = []
     for img in images:
         row_lines, col_lines = detect_grid(img, manual_rows, manual_cols)
         pages_data.append((img, row_lines, col_lines))
 
-    # Preview: first page
+    # Preview: first page — downscale to max 1200px for fast browser loading
     first_img, first_rows, first_cols = pages_data[0]
     preview = draw_grid_overlay(first_img, first_rows, first_cols, grid_style)
-    cv2.imwrite(preview_path, preview)
+    ph, pw = preview.shape[:2]
+    if max(ph, pw) > 1200:
+        ps = 1200 / max(ph, pw)
+        preview = cv2.resize(preview, (int(pw * ps), int(ph * ps)), interpolation=cv2.INTER_AREA)
+    cv2.imwrite(preview_path, preview, [cv2.IMWRITE_JPEG_QUALITY, 85])
 
     from pdf_generator import generate_practice_pdf
     generate_practice_pdf(pages_data, output_pdf_path, grid_style)
