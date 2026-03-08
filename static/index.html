@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Calligraphy Practice Sheet</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #1a1a1a;
+      --paper:    #faf8f4;
+      --accent:   #8b3a10;
+      --accent2:  #c0622a;
+      --muted:    #888;
+      --border:   #ddd;
+      --card-bg:  #ffffff;
+      --success:  #2d7a2d;
+      --error:    #9b1c1c;
+      --radius:   14px;
+      --shadow:   0 2px 12px rgba(0,0,0,.08);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────────── */
+    header {
+      background: var(--ink);
+      color: #fff;
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 30px; line-height: 1; }
+    .header-text h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+    .header-text p  { font-size: 12px; opacity: .6; margin-top: 2px; }
+
+    /* ── Main layout ───────────────────────────────────────────────────────── */
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Card ──────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .card-body { padding: 18px; }
+
+    /* ── Upload zone ───────────────────────────────────────────────────────── */
+    #uploadZone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #uploadZone.drag-over,
+    #uploadZone:active { border-color: var(--accent); background: #fdf5f0; }
+
+    #uploadZone .upload-icon { font-size: 44px; margin-bottom: 10px; }
+    #uploadZone .upload-title { font-size: 16px; font-weight: 600; color: var(--ink); }
+    #uploadZone .upload-sub   {
+      font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5;
+    }
+
+    /* Mobile: big tap-target buttons for camera / file */
+    .pick-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .pick-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s, border-color .15s;
+    }
+    .pick-btn:active { background: #f0ebe5; border-color: var(--accent); }
+    .pick-btn .btn-icon { font-size: 26px; }
+
+    /* Hidden inputs */
+    #fileInputGallery,
+    #fileInputCamera { display: none; }
+
+    /* Selected file badge */
+    #fileBadge {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #fdf5f0;
+      border: 1px solid #e8c9b5;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--accent);
+      word-break: break-all;
+    }
+    #fileBadge.visible { display: block; }
+
+    /* ── Options ───────────────────────────────────────────────────────────── */
+    .option-row {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .option-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .option-group select,
+    .option-group input[type="number"] {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fafafa;
+      color: var(--ink);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .option-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .opt-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .hint-text  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Process button ────────────────────────────────────────────────────── */
+    #processBtn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #processBtn:disabled { opacity: .45; cursor: not-allowed; }
+    #processBtn:not(:disabled):active { background: #6b2a08; }
+
+    /* ── Status bar ────────────────────────────────────────────────────────── */
+    #status {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-top: 12px;
+    }
+    #status.processing { display: block; background: #fff8e1; color: #7a5c00; }
+    #status.success    { display: block; background: #e8f5e9; color: var(--success); }
+    #status.error      { display: block; background: #fde8e8; color: var(--error); }
+
+    /* ── Spinner ───────────────────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(122, 92, 0, .3);
+      border-top-color: #7a5c00;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      vertical-align: middle;
+      margin-right: 7px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stats row ─────────────────────────────────────────────────────────── */
+    .stats {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
+      margin: 0 0 18px;
+    }
+    .stat {
+      flex: 1;
+      text-align: center;
+      padding: 14px 8px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── Preview image ─────────────────────────────────────────────────────── */
+    #previewImg {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+    }
+
+    /* ── Download button ───────────────────────────────────────────────────── */
+    #downloadBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .2s;
+    }
+    #downloadBtn:active { background: #1e5a1e; }
+
+    /* ── Footer ────────────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 24px 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">&#x6BD5;</div>
+  <div class="header-text">
+    <h1>Calligraphy Practice Sheet</h1>
+    <p>Scan &#x2192; Auto-Grid &#x2192; Print-Ready PDF</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- Step 1: Upload -->
+  <div class="card">
+    <div class="card-header">1 &nbsp; Select Manuscript</div>
+    <div class="card-body">
+      <div id="uploadZone">
+        <div class="upload-icon">&#x1F4DC;</div>
+        <div class="upload-title">Choose your calligraphy file</div>
+        <div class="upload-sub">PDF, JPG, PNG, TIFF &mdash; scanned or photographed</div>
+
+        <div class="pick-buttons">
+          <!-- Gallery / Files picker (works on all platforms) -->
+          <label class="pick-btn" for="fileInputGallery">
+            <span class="btn-icon">&#x1F5C2;</span>
+            <span>Files / Gallery</span>
+          </label>
+          <!-- Camera (mobile only, silently ignored on desktop) -->
+          <label class="pick-btn" for="fileInputCamera">
+            <span class="btn-icon">&#x1F4F7;</span>
+            <span>Camera</span>
+          </label>
+        </div>
+
+        <!-- File: gallery + PDF -->
+        <input type="file" id="fileInputGallery"
+               accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif,.bmp,.heic,.heif,image/*" />
+        <!-- Camera capture on mobile -->
+        <input type="file" id="fileInputCamera"
+               accept="image/*" capture="environment" />
+      </div>
+
+      <div id="fileBadge"></div>
+    </div>
+  </div>
+
+  <!-- Step 2: Options -->
+  <div class="card">
+    <div class="card-header">2 &nbsp; Options</div>
+    <div class="card-body">
+      <div class="option-row">
+
+        <div class="option-group">
+          <label>Grid Style</label>
+          <select id="gridStyle">
+            <option value="tian">&#x7530;&#x5B57;&#x683C; &mdash; 4-quadrant guide</option>
+            <option value="mi">&#x7C73;&#x5B57;&#x683C; &mdash; 8-direction guide</option>
+            <option value="jiu">&#x4E5D;&#x5BAE;&#x683C; &mdash; 9-square guide</option>
+            <option value="plain">Plain grid &mdash; boundary only</option>
+          </select>
+        </div>
+
+        <div class="opt-row-2">
+          <div class="option-group">
+            <label>Rows</label>
+            <input type="number" id="manualRows" min="0" max="60" value="0" inputmode="numeric" />
+            <div class="hint-text">0 = auto-detect</div>
+          </div>
+          <div class="option-group">
+            <label>Columns</label>
+            <input type="number" id="manualCols" min="0" max="60" value="0" inputmode="numeric" />
+            <div class="hint-text">0 = auto-detect</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Process button -->
+  <button id="processBtn" disabled onclick="processFile()">
+    Generate Practice Sheet
+  </button>
+  <div id="status"></div>
+
+  <!-- Step 3: Result (hidden until ready) -->
+  <div class="card" id="resultCard" style="display:none">
+    <div class="card-header">3 &nbsp; Result</div>
+    <div class="stats" id="statsRow"></div>
+    <div style="padding: 0 18px 4px">
+      <img id="previewImg" src="" alt="Grid preview" />
+      <button id="downloadBtn" onclick="downloadPDF()">
+        &#x2B07;&#xFE0F; &nbsp; Download Practice PDF
+      </button>
+    </div>
+    <div style="height:18px"></div>
+  </div>
+
+</main>
+
+<footer>
+  Chinese Calligraphy Practice Sheet Generator
+</footer>
+
+<script>
+  /* ── State ──────────────────────────────────────────────────────────────── */
+  let selectedFile = null;
+  let currentFileId = null;
+
+  /* ── File pickers ───────────────────────────────────────────────────────── */
+  document.getElementById('fileInputGallery').addEventListener('change', e => handleFile(e.target.files[0]));
+  document.getElementById('fileInputCamera').addEventListener('change',  e => handleFile(e.target.files[0]));
+
+  /* Drag-and-drop (desktop) */
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    const badge = document.getElementById('fileBadge');
+    badge.textContent = `\u2713  ${file.name}  (${fmtSize(file.size)})`;
+    badge.classList.add('visible');
+    document.getElementById('processBtn').disabled = false;
+    // Hide old result
+    document.getElementById('resultCard').style.display = 'none';
+    setStatus('', '');
+  }
+
+  function fmtSize(b) {
+    return b < 1024 * 1024 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  /* ── Status helper ──────────────────────────────────────────────────────── */
+  function setStatus(type, html) {
+    const el = document.getElementById('status');
+    el.className = type ? `status ${type}` : 'status';
+    el.style.display = type ? 'block' : 'none';
+    el.innerHTML = html;
+  }
+
+  /* ── Process ────────────────────────────────────────────────────────────── */
+  async function processFile() {
+    if (!selectedFile) return;
+
+    const btn = document.getElementById('processBtn');
+    btn.disabled = true;
+    document.getElementById('resultCard').style.display = 'none';
+    setStatus('processing', '<span class="spinner"></span> Analysing manuscript and building grid&hellip;');
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+    form.append('grid_style', document.getElementById('gridStyle').value);
+    const rows = parseInt(document.getElementById('manualRows').value) || 0;
+    const cols = parseInt(document.getElementById('manualCols').value) || 0;
+    if (rows > 0) form.append('rows', rows);
+    if (cols > 0) form.append('cols', cols);
+
+    try {
+      const res  = await fetch('/process', { method: 'POST', body: form });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setStatus('error', '\u2717 ' + (data.error || 'Processing failed. Please try again.'));
+        btn.disabled = false;
+        return;
+      }
+
+      currentFileId = data.file_id;
+
+      // Stats row
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat"><div class="stat-value">${data.pages}</div><div class="stat-label">Pages</div></div>
+        <div class="stat"><div class="stat-value">${data.rows}</div><div class="stat-label">Rows</div></div>
+        <div class="stat"><div class="stat-value">${data.cols}</div><div class="stat-label">Columns</div></div>
+      `;
+
+      // Preview
+      const img = document.getElementById('previewImg');
+      img.src = data.preview_url + '?t=' + Date.now();
+
+      document.getElementById('resultCard').style.display = 'block';
+      setStatus('success', '\u2713 Practice sheet ready! Preview below.');
+
+      // Scroll to result on mobile
+      setTimeout(() => {
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+
+    } catch (err) {
+      setStatus('error', '\u2717 Network error: ' + err.message);
+    }
+
+    btn.disabled = false;
+  }
+
+  /* ── Download ───────────────────────────────────────────────────────────── */
+  function downloadPDF() {
+    if (!currentFileId) return;
+    // On mobile this triggers the native share/save sheet
+    const a = document.createElement('a');
+    a.href = `/download/${currentFileId}`;
+    a.download = 'calligraphy_practice.pdf';
+    a.click();
+  }
+</script>
+
+</body>
+</html>
